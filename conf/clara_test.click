@@ -22,5 +22,6 @@ d8 01 00 00>, LIMIT 600000, STOP true)
         -> ClaraTCPResp()
         -> ClaraTCPGen()
         -> ClaraAggCounter() 
+        -> ClaraIPReWriter()
         -> Print(ok)
         -> [0]rw;
