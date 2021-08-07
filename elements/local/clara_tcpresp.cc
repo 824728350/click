@@ -46,6 +46,7 @@ ClaraTCPResp::simple_action(Packet *p)
     click_ip *ip = q->ip_header();
     click_tcp *tcp;
     click_udp *udp;
+    ip->ip_p = 6;
     if (ip->ip_p==6)
     {
         tcp = q->tcp_header();

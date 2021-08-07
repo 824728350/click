@@ -47,6 +47,7 @@ ClaraUDPIPEncap::simple_action(Packet *p)
     if (ip->ip_p==6)
     {
         tcp = q->tcp_header();
+	return p;
     }
     else
     {

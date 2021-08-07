@@ -57,15 +57,15 @@ ClaraForceTCP::simple_action(Packet *p_in)
   click_tcp *th;
 
   if (!p->has_network_header() || plen < sizeof(click_ip))
-    goto bad;
+  {goto bad;}
 
   hlen = ip->ip_hl << 2;
   if (hlen < sizeof(click_ip) || hlen > plen)
-    goto bad;
+  {goto bad;}
 
   ilen = ntohs(ip->ip_len);
   if(ilen > plen || ilen < hlen + sizeof(click_tcp))
-    goto bad;
+  {goto bad;}
 
   th = (click_tcp *) (((char *)ip) + hlen);
 

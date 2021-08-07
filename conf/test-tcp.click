@@ -1,5 +1,5 @@
 
-FromDevice(eth0) 
+FromDevice(ens6f0) 
   -> is_ip :: Classifier(12/0800, -);
 is_ip [1] -> Discard;
 

@@ -1,14 +1,16 @@
-
 #include <click/config.h>
 #include "clara_anonipaddr.hh"
 #include <click/glue.hh>
 #include <click/error.hh>
+#include <clicknet/ether.h>
 #include <clicknet/ip.h>
 #include <clicknet/tcp.h>
 #include <clicknet/udp.h>
 #include <clicknet/icmp.h>
 #include <algorithm>
 #include <click/args.hh>
+#include <click/etheraddress.hh>
+#include <click/standard/alignmentinfo.hh>
 CLICK_DECLS
 
 ClaraAnonIPAddr::ClaraAnonIPAddr(): _active(true)
@@ -30,12 +32,48 @@ Packet *
 ClaraAnonIPAddr::simple_action(Packet *p)
 {
     assert(p->has_network_header());
+    _active = 1;
     if (!_active)
     {   
         return p;
     }
     
     WritablePacket *q = p->uniqueify();
+    //WritablePacket *q = Packet::make(64);
+    click_ether _ethh;
+    _ethh.ether_shost[0] = htons(0x12);
+    _ethh.ether_dhost[0] = htons(0x11);
+    _ethh.ether_type = htons(0x0800);
+    click_ip *ip = reinterpret_cast<click_ip *>(q->data()+14);
+    click_tcp *tcp = reinterpret_cast<click_tcp *>(ip + 1);
+    //memcpy(q->data(), &_ethh, 14);
+
+    ip->ip_v = 4;
+    ip->ip_hl = sizeof(click_ip) >> 2;
+    ip->ip_len = htons(64-14);
+    ip->ip_id = 0;
+    ip->ip_p = 6;
+    ip->ip_src.s_addr = htons(0x11223344);
+    ip->ip_dst.s_addr = htons(0x11223355);
+    ip->ip_tos = 0;
+    ip->ip_off = 0;
+    ip->ip_ttl = 250;
+    ip->ip_sum = 0;
+    ip->ip_sum = click_in_cksum((unsigned char *)ip, sizeof(click_ip));
+
+    tcp->th_sport = 100;
+    tcp->th_dport = 20;
+    tcp->th_seq = click_random();
+    tcp->th_ack = click_random();
+    tcp->th_off = sizeof(click_tcp) >> 2;
+    tcp->th_flags = TH_SYN;
+    tcp->th_win = 65535;
+    tcp->th_urp = 0;
+    tcp->th_sum = 0;
+    unsigned short len = 64-14-sizeof(click_ip);
+    unsigned csum = click_in_cksum((uint8_t *)tcp, len);
+    tcp->th_sum = click_in_cksum_pseudohdr(csum, ip, len);
+
     if (!q)
     {   
         return 0;
@@ -43,8 +81,8 @@ ClaraAnonIPAddr::simple_action(Packet *p)
     
     volatile uint32_t src, dst;
     volatile uint32_t sum;    
-    click_ip *ip = q->ip_header();
-    click_tcp *tcp;
+    //click_ip *ip = q->ip_header();
+    //click_tcp *tcp;
     click_udp *udp;
     if (ip->ip_p==6)
     {   
@@ -75,7 +113,7 @@ ClaraAnonIPAddr::simple_action(Packet *p)
     {
          ip->ip_sum += 1;
     }
-
+    
     // to keep all local variables alive
     ip->ip_src.s_addr = 8888 | src | dst | sum | 6666;
     return q;

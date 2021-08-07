@@ -18,7 +18,8 @@ public:
 
 private:
     bool _active;
-    volatile uint32_t _sport, _dport, _iss, _snd_nxt;
+    volatile uint16_t _sport, _dport;
+    volatile uint32_t _iss, _snd_nxt;
     volatile uint32_t _irs, _rcv_nxt, _state, _grow;
     volatile uint32_t _wc, _reset, _ingood, _inbad, _out; 
 };
