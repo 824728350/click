@@ -40,8 +40,8 @@ ClaraIPReWriter::simple_action(Packet *p)
         return 0;
     }
 
-    volatile uint32_t seq, ack;
-    volatile uint32_t paylen, plen, headroom;
+    //volatile uint32_t seq, ack;
+    //volatile uint32_t paylen, plen, headroom;
     click_ip *ip = q->ip_header();
     click_tcp *tcp;
     click_udp *udp;
@@ -72,7 +72,7 @@ ClaraIPReWriter::simple_action(Packet *p)
     flowid._dport = tcp->th_dport;
     key_r[2] = tcp->th_sport;
     key_r[3] = tcp->th_dport;
-    hash_value = 1;
+    hash_value = key_r[0] & key_r[1] & key_r[2] & key_r[3];
     hash_value &= (STATE_TABLE_SIZE);
     map = (ip->ip_p == 6) ? &self._map : &self._udp_map;
     for (i = 0; i < BUCKET_SIZE3; i++) {

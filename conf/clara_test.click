@@ -23,6 +23,11 @@ d8 01 00 00>, LIMIT 600000, STOP true)
         -> ClaraTCPGen()
         -> ClaraAggCounter() 
         -> ClaraIPReWriter()
+        -> ClaraFTPPortMapper()
+        -> ClaraCounter()
+        -> ClaraTCPDemux()
+        -> ClaraAVCounter()
+        -> ClaraIPFilter()
         -> Print(ok)
         -> Discard
         //-> [0]rw;
