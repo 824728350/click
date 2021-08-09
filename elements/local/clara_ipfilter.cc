@@ -8,6 +8,8 @@
 #include <clicknet/icmp.h>
 #include <algorithm>
 #include <click/args.hh>
+#include <click/straccum.hh>
+#include <click/router.hh>
 CLICK_DECLS
 #define PERFORM_BINARY_SEARCH 0
 ClaraIPFilter::ClaraIPFilter(): _active(true)
@@ -33,7 +35,11 @@ ClaraIPFilter::simple_action(Packet *p)
     {
         return p;
     }
-
+    StringAccum sa;
+    String channel;
+    int comp_inst = 0;
+    int mem_inst = 0;
+    ErrorHandler *_errh = router()->chatter_channel(channel);
     WritablePacket *q = p->uniqueify();
     if (!q)
     {
@@ -103,6 +109,8 @@ ClaraIPFilter::simple_action(Packet *p)
             pr_l += off1;
     }
     ip->ip_src.s_addr += pr_l[0];
+    sa << "Clara IPFilter -> " << "Num of compute: " << comp_inst << ", Num of ext memory: " << mem_inst << "\n";
+    _errh->message("%s", sa.c_str());
     return q;
 }
 

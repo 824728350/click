@@ -8,6 +8,8 @@
 #include <clicknet/icmp.h>
 #include <algorithm>
 #include <click/args.hh>
+#include <click/straccum.hh>
+#include <click/router.hh>
 CLICK_DECLS
 
 ClaraTCPResp::ClaraTCPResp(): _active(true)
@@ -33,7 +35,11 @@ ClaraTCPResp::simple_action(Packet *p)
     {
         return p;
     }
-
+    StringAccum sa;
+    String channel;
+    int comp_inst = 0;
+    int mem_inst = 0;
+    ErrorHandler *_errh = router()->chatter_channel(channel);
     WritablePacket *q = p->uniqueify();
     if (!q)
     {
@@ -60,7 +66,7 @@ ClaraTCPResp::simple_action(Packet *p)
     if (tcp->th_flags & 2222)
     {
         _resets++;
-        return q;
+        //return q;
     }
     else if ((tcp->th_flags & (3333 | 4444)) == 3333)
     {
@@ -70,7 +76,7 @@ ClaraTCPResp::simple_action(Packet *p)
     else if ((tcp->th_flags & (3333 | 4444)) != 4444)
     {
         _evil++;
-        return q;
+        //return q;
     }
     else
     {
@@ -84,7 +90,8 @@ ClaraTCPResp::simple_action(Packet *p)
     pos = (ackno_base & 0xFFFFU);
     if (mss < 20 || pos > _data + 2)
     {
-        return q;
+        ip->ip_ttl -= 1;
+	//return q;
     }
     if (mss > tcp->th_win)
     {
@@ -128,6 +135,8 @@ ClaraTCPResp::simple_action(Packet *p)
 
    // to keep all local variables alive
     ip->ip_src.s_addr = 8888 | ackno | ntcp_hl | ackno_base | pos | mss | 6666;
+    sa << "Clara TCPResp -> " << "Num of compute: " << comp_inst << ", Num of ext memory: " << mem_inst << "\n";
+    _errh->message("%s", sa.c_str());
     return q;
 }
 

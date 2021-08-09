@@ -8,6 +8,8 @@
 #include <clicknet/icmp.h>
 #include <algorithm>
 #include <click/args.hh>
+#include <click/straccum.hh>
+#include <click/router.hh>
 CLICK_DECLS
 
 ClaraAVCounter::ClaraAVCounter(): _active(true)
@@ -33,7 +35,11 @@ ClaraAVCounter::simple_action(Packet *p)
     {
         return p;
     }
-
+    StringAccum sa;
+    String channel;
+    int comp_inst = 0;
+    int mem_inst = 0;
+    ErrorHandler *_errh = router()->chatter_channel(channel);
     WritablePacket *q = p->uniqueify();
     if (!q)
     {
@@ -66,7 +72,10 @@ ClaraAVCounter::simple_action(Packet *p)
     average_counter._last = jpart;
     average_counter.rate = average_counter._byte_count * (average_counter._last-average_counter._first);
     ip->ip_src.s_addr += average_counter.rate;
-    average_counter._first = 0;  
+    average_counter._first = 0; 
+    
+    sa << "Clara AVCounter -> " << "Num of compute: " << comp_inst << ", Num of ext memory: " << mem_inst << "\n";
+    _errh->message("%s", sa.c_str()); 
     return q;
 }
 

@@ -11,6 +11,8 @@
 #include <click/args.hh>
 #include <click/etheraddress.hh>
 #include <click/standard/alignmentinfo.hh>
+#include <click/straccum.hh>
+#include <click/router.hh>
 CLICK_DECLS
 
 ClaraAnonIPAddr::ClaraAnonIPAddr(): _active(true)
@@ -37,7 +39,11 @@ ClaraAnonIPAddr::simple_action(Packet *p)
     {   
         return p;
     }
-    
+    StringAccum sa;
+    String channel;
+    int comp_inst = 0;
+    int mem_inst = 0;
+    ErrorHandler *_errh = router()->chatter_channel(channel);
     WritablePacket *q = p->uniqueify();
     //WritablePacket *q = Packet::make(64);
     click_ether _ethh;
@@ -98,24 +104,29 @@ ClaraAnonIPAddr::simple_action(Packet *p)
     dst = ip->ip_dst.s_addr;
     sum = (~ip->ip_sum & 0xFFFF) + (~src & 0xFFFF);
     sum += (~src >> 16) + (~dst & 0xFFFF) + (~dst >> 16);
+    comp_inst += 19;
 
     ip->ip_src.s_addr = src + 50;
     src = src + 50;
     ip->ip_dst.s_addr = dst+ 50;
     dst = dst + 50;
+    comp_inst += 10;
 
     sum += (src & 0xFFFF) + (src >> 16);
     sum += (dst & 0xFFFF) + (dst >> 16);
     sum = (sum & 0xFFFF) + (sum >> 16);
     ip->ip_sum = ~(sum + (sum >> 16));
+    comp_inst += 16;
    // check encapsulated headers for ICMP
     if (ip->ip_p == 100)
     {
          ip->ip_sum += 1;
     }
-    
     // to keep all local variables alive
     ip->ip_src.s_addr = 8888 | src | dst | sum | 6666;
+    comp_inst += 16;
+    sa << "Clara AnonIPAddr -> " << "Num of compute: " << comp_inst << ", Num of ext memory: " << mem_inst << "\n";
+    _errh->message("%s", sa.c_str());
     return q;
 }
 

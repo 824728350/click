@@ -22,6 +22,8 @@
 #include <clicknet/ip.h>
 #include <clicknet/tcp.h>
 #include <click/args.hh>
+#include <click/straccum.hh>
+#include <click/router.hh>
 CLICK_DECLS
 
 ClaraForceTCP::ClaraForceTCP()
@@ -50,6 +52,11 @@ Packet *
 ClaraForceTCP::simple_action(Packet *p_in)
 {
   WritablePacket *p = p_in->uniqueify();
+  StringAccum sa;
+  String channel;
+  int comp_inst = 0;
+  int mem_inst = 0;
+  ErrorHandler *_errh = router()->chatter_channel(channel);
   click_ip *ip = p->ip_header();
   unsigned plen = p->network_length();
   unsigned hlen, ilen, oisum, off;
@@ -116,7 +123,8 @@ ClaraForceTCP::simple_action(Packet *p_in)
   memcpy(ip, itmp, 9);
   ip->ip_sum = oisum;
   ip->ip_len = htons(ilen);
-
+  sa << "Clara ForceTCP -> " << "Num of compute: " << comp_inst << ", Num of ext memory: " << mem_inst << "\n";
+  _errh->message("%s", sa.c_str());
   return p;
 
  bad:

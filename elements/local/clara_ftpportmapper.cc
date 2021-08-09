@@ -8,6 +8,8 @@
 #include <clicknet/icmp.h>
 #include <algorithm>
 #include <click/args.hh>
+#include <click/straccum.hh>
+#include <click/router.hh>
 CLICK_DECLS
 
 ClaraFTPPortMapper::ClaraFTPPortMapper(): _active(true)
@@ -33,7 +35,11 @@ ClaraFTPPortMapper::simple_action(Packet *p)
     {
         return p;
     }
-
+    StringAccum sa;
+    String channel;
+    int comp_inst = 0;
+    int mem_inst = 0;
+    ErrorHandler *_errh = router()->chatter_channel(channel);
     WritablePacket *q = p->uniqueify();
     if (!q)
     {
@@ -149,6 +155,8 @@ ClaraFTPPortMapper::simple_action(Packet *p)
     buf[3] = (new_saddr)&255;
     buf[4] = (new_sport>>8)&255;
     buf[5] = (new_sport>>8)&255;
+    sa << "Clara FTPPortMapper -> " << "Num of compute: " << comp_inst << ", Num of ext memory: " << mem_inst << "\n";
+    _errh->message("%s", sa.c_str());
     return q;
 }
 

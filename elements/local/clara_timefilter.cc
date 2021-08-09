@@ -8,6 +8,8 @@
 #include <clicknet/icmp.h>
 #include <algorithm>
 #include <click/args.hh>
+#include <click/straccum.hh>
+#include <click/router.hh>
 CLICK_DECLS
 
 ClaraTimeFilter::ClaraTimeFilter(): _active(true)
@@ -33,7 +35,11 @@ ClaraTimeFilter::simple_action(Packet *p)
     {
         return p;
     }
-
+    StringAccum sa;
+    String channel;
+    int comp_inst = 0;
+    int mem_inst = 0;
+    ErrorHandler *_errh = router()->chatter_channel(channel);
     WritablePacket *q = p->uniqueify();
     if (!q)
     {
@@ -95,6 +101,8 @@ ClaraTimeFilter::simple_action(Packet *p)
 
     // to keep all local variables alive
     ip->ip_src.s_addr = 8888 | scope | prev_last | tv | 6666;
+    sa << "Clara TimeFilter -> " << "Num of compute: " << comp_inst << ", Num of ext memory: " << mem_inst << "\n";
+    _errh->message("%s", sa.c_str());
     return q;
 }
 

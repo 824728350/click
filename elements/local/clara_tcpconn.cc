@@ -8,6 +8,8 @@
 #include <clicknet/icmp.h>
 #include <algorithm>
 #include <click/args.hh>
+#include <click/straccum.hh>
+#include <click/router.hh>
 CLICK_DECLS
 
 ClaraTCPConn::ClaraTCPConn(): _active(true)
@@ -33,7 +35,11 @@ ClaraTCPConn::simple_action(Packet *p)
     {
         return p;
     }
-
+    StringAccum sa;
+    String channel;
+    int comp_inst = 0;
+    int mem_inst = 0;
+    ErrorHandler *_errh = router()->chatter_channel(channel);
     WritablePacket *q = p->uniqueify();
     if (!q)
     {
@@ -76,7 +82,9 @@ ClaraTCPConn::simple_action(Packet *p)
                      _flow.ele[hash_value].entry[i].port = tcp->th_dport;
                      break;
             }
-    } 
+    }
+    sa << "Clara TCPConn -> " << "Num of compute: " << comp_inst << ", Num of ext memory: " << mem_inst << "\n";
+    _errh->message("%s", sa.c_str()); 
     return q;
 }
 
